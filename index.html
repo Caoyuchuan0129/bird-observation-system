@@ -1,0 +1,2542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>高铁干扰下水鸟行为观测记录系统</title>
+    <style>
+        /* 基本样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            touch-action: pan-y;
+        }
+        
+        body {
+            background-color: #f0f8ff;
+            color: #333;
+            line-height: 1.6;
+            padding: 10px;
+            max-width: 100%;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e5799 0%, #207cca 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        /* 标签页样式 */
+        .tab-container {
+            display: flex;
+            background-color: #e6f2ff;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 5px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #1e5799;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .tab.active {
+            background-color: #1e5799;
+            color: white;
+        }
+        
+        .tab::before {
+            display: inline-block;
+            margin-right: 6px;
+            font-size: 1rem;
+        }
+        
+        .tab[data-tab="observation"]::before {
+            content: "👁️";
+        }
+        
+        .tab[data-tab="interference"]::before {
+            content: "🚆";
+        }
+        
+        .tab[data-tab="behavior"]::before {
+            content: "🐦";
+        }
+        
+        /* 面板样式 */
+        .panel {
+            display: none;
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .panel.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            color: #1e5799;
+            border-bottom: 2px solid #e6f2ff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .section-title::before {
+            margin-right: 10px;
+        }
+        
+        #observation-panel .section-title::before {
+            content: "👁️";
+        }
+        
+        #interference-panel .section-title::before {
+            content: "🚆";
+        }
+        
+        #behavior-panel .section-title::before {
+            content: "🐦";
+        }
+        
+        /* 调研记录列表样式 */
+        .survey-list {
+            margin-bottom: 25px;
+        }
+        
+        .survey-item {
+            background-color: #f8faff;
+            border-left: 5px solid #1e5799;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .survey-info {
+            flex-grow: 1;
+        }
+        
+        .survey-site {
+            display: inline-block;
+            background-color: #e6f2ff;
+            color: #1e5799;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        
+        .survey-date {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .survey-entries-count {
+            font-size: 0.85rem;
+            color: #888;
+        }
+        
+        /* 按钮样式 */
+        .delete-btn {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .delete-btn:hover, .delete-btn:active {
+            background-color: #ff5252;
+        }
+        
+        .export-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background-color 0.3s;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .export-btn:hover, .export-btn:active {
+            background-color: #218838;
+        }
+        
+        .add-survey-btn {
+            background-color: #1e5799;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .add-survey-btn:hover, .add-survey-btn:active {
+            background-color: #164c8a;
+        }
+        
+        .add-survey-btn::before {
+            content: "➕";
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .export-section-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .export-section-btn::before {
+            content: "📤";
+            margin-right: 8px;
+        }
+        
+        .export-section-btn:hover, .export-section-btn:active {
+            background-color: #218838;
+        }
+        
+        .form-container {
+            background-color: #f8faff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .form-container.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #1e5799;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1e3ff;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #1e5799;
+            box-shadow: 0 0 0 3px rgba(30, 87, 153, 0.1);
+        }
+        
+        .time-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .time-btn::before {
+            content: "⏱️";
+            margin-right: 8px;
+        }
+        
+        .time-btn:hover, .time-btn:active {
+            background-color: #3d8b40;
+        }
+        
+        /* 行为按钮容器 - 优化为3列布局 */
+        .behavior-btn-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        /* 行为按钮 - 缩小尺寸 */
+        .behavior-btn {
+            background-color: #1e5799;
+            color: white;
+            border: none;
+            padding: 12px 6px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+            min-height: 70px;
+        }
+        
+        .behavior-btn:hover, .behavior-btn:active {
+            background-color: #164c8a;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .behavior-btn.distribution {
+            background-color: #2a9d8f;
+        }
+        
+        .behavior-btn.distribution:hover, .behavior-btn.distribution:active {
+            background-color: #228176;
+        }
+        
+        .behavior-btn::before {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        /* 设置每个行为按钮的图标 */
+        .behavior-btn[data-behavior="觅食"]::before { content: "🍴"; }
+        .behavior-btn[data-behavior="进食"]::before { content: "🍽️"; }
+        .behavior-btn[data-behavior="觅食成功"]::before { content: "✅"; }
+        .behavior-btn[data-behavior="饮水"]::before { content: "💧"; }
+        .behavior-btn[data-behavior="起飞"]::before { content: "✈️"; }
+        .behavior-btn[data-behavior="惊飞"]::before { content: "🏃"; }
+        .behavior-btn[data-behavior="降落"]::before { content: "🛬"; }
+        .behavior-btn[data-behavior="理羽"]::before { content: "🪶"; }
+        .behavior-btn[data-behavior="交流鸣叫"]::before { content: "💬"; }
+        .behavior-btn[data-behavior="互动行为（积极）"]::before { content: "👍"; }
+        .behavior-btn[data-behavior="互动行为（消极）"]::before { content: "👎"; }
+        .behavior-btn[data-behavior="警示鸣叫"]::before { content: "⚠️"; }
+        .behavior-btn[data-behavior="张望（3s）"]::before { content: "👀"; }
+        .behavior-btn[data-behavior="警戒"]::before { content: "🛡️"; }
+        .behavior-btn[data-behavior="加速移动"]::before { content: "⚡"; }
+        .behavior-btn[data-behavior="集群"]::before { content: "👥"; }
+        .behavior-btn[data-behavior="分散"]::before { content: "👤"; }
+        .behavior-btn[data-behavior="归岸"]::before { content: "⬅️"; }
+        .behavior-btn[data-behavior="离岸"]::before { content: "➡️"; }
+        .behavior-btn[data-behavior="位置变更0-30"]::before { content: "↔️0-30"; }
+        .behavior-btn[data-behavior="位置变更30-60"]::before { content: "↔️30-60"; }
+        .behavior-btn[data-behavior="位置变更60-100"]::before { content: "↔️60-100"; }
+        .behavior-btn[data-behavior="位置变更100-150"]::before { content: "↔️100-150"; }
+        .behavior-btn[data-behavior="位置变更150-250"]::before { content: "↔️150-250"; }
+        
+        .entry-list {
+            margin-top: 20px;
+        }
+        
+        .entry-item {
+            background-color: white;
+            border: 1px solid #e6f2ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #e6f2ff;
+        }
+        
+        .entry-id {
+            background-color: #e6f2ff;
+            color: #1e5799;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .entry-time {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .entry-details {
+            font-size: 0.95rem;
+            color: #444;
+        }
+        
+        .entry-details div {
+            margin-bottom: 5px;
+        }
+        
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 1000;
+            animation: fadeInOut 2s ease;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(10px); }
+        }
+        
+        .export-indicator {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+            z-index: 1000;
+            animation: fadeInOut 3s ease;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+        
+        .empty-state::before {
+            content: "📄";
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            color: #d1e3ff;
+        }
+        
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+        
+        /* iOS优化 */
+        input, select, button {
+            font-size: 16px; /* 防止iOS缩放 */
+        }
+        
+        button:active {
+            opacity: 0.8;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .behavior-btn-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .behavior-btn {
+                padding: 10px 4px;
+                font-size: 0.8rem;
+                min-height: 65px;
+            }
+            
+            .survey-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .delete-btn, .export-btn {
+                align-self: flex-end;
+                margin-top: 10px;
+                margin-left: 0;
+                margin-right: 10px;
+            }
+            
+            .survey-item > div:last-child {
+                display: flex;
+                align-self: flex-end;
+                margin-top: 10px;
+            }
+            
+            .section-title {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .section-title > div {
+                margin-top: 10px;
+                display: flex;
+                flex-wrap: wrap;
+            }
+            
+            .export-section-btn, .time-btn {
+                margin-left: 0;
+                margin-right: 10px;
+                margin-bottom: 10px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .behavior-btn-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .behavior-btn {
+                font-size: 0.75rem;
+                padding: 8px 4px;
+                min-height: 60px;
+            }
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        .auto-id {
+            background-color: #f0f8ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #1e5799;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .export-help {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        
+        .export-help::before {
+            content: "ℹ️";
+            margin-right: 8px;
+        }
+        
+        .state-indicator {
+            background-color: #e6f2ff;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        /* 滚动优化 */
+        .scrollable-container {
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+        }
+        
+        /* 防止误触的滑动区域 */
+        .swipe-guard {
+            position: relative;
+        }
+        
+        /* 优化触摸滚动 */
+        .touch-scroll-optimized {
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        
+        /* 防止按钮在滚动时被触发 */
+        .behavior-btn-container {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>高铁干扰下水鸟行为观测记录系统</h1>
+        <p>所有数据修改后实时自动保存，支持删除和导出功能</p>
+    </div>
+    
+    <div class="tab-container">
+        <div class="tab active" data-tab="observation">
+            观测对象
+        </div>
+        <div class="tab" data-tab="interference">
+            高铁干扰
+        </div>
+        <div class="tab" data-tab="behavior">
+            鸟类行为
+        </div>
+    </div>
+    
+    <!-- 观测对象记录板块 -->
+    <div class="panel active" id="observation-panel">
+        <div class="section-title">
+            <span>观测对象记录</span>
+            <div>
+                <button class="export-section-btn" id="export-all-observation">
+                    导出全部记录
+                </button>
+            </div>
+        </div>
+        
+        <div class="export-help">
+            导出功能说明：点击导出按钮后，数据会生成并自动下载为CSV文件。如果未自动下载，请检查浏览器下载设置。
+        </div>
+        
+        <button class="add-survey-btn" id="add-observation-survey">
+            新建观测对象调研记录
+        </button>
+        
+        <!-- 新建调研记录表单 -->
+        <div class="form-container" id="observation-form">
+            <div class="form-group">
+                <label>观测地</label>
+                <select class="form-control" id="observation-site">
+                    <option value="">请选择观测地</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" class="form-control" id="observation-date">
+            </div>
+            
+            <button class="add-survey-btn" id="save-observation-survey">
+                创建调研记录并开始分条记录
+            </button>
+        </div>
+        
+        <!-- 调研记录列表 -->
+        <div class="survey-list" id="observation-survey-list">
+            <!-- 调研记录将通过JavaScript动态生成 -->
+        </div>
+        
+        <!-- 分条记录区域 -->
+        <div id="observation-entries-area" style="display: none;">
+            <div class="section-title">
+                <span>观测对象分条记录</span>
+                <div>
+                    <button class="export-section-btn" id="export-observation-entries">
+                        导出当前记录
+                    </button>
+                    <button class="time-btn" id="back-to-observation-list">
+                        返回
+                    </button>
+                </div>
+            </div>
+            
+            <div class="state-indicator" id="observation-state">
+                当前观测地：<span id="current-observation-site"></span>，日期：<span id="current-observation-date"></span>
+            </div>
+            
+            <button class="add-survey-btn" id="add-observation-entry">
+                新建观测对象记录
+            </button>
+            
+            <!-- 分条记录表单 -->
+            <div class="form-container" id="observation-entry-form">
+                <div class="form-group">
+                    <label>对象编号</label>
+                    <input type="text" class="form-control" id="object-id" placeholder="请输入对象编号">
+                </div>
+                
+                <div class="form-group">
+                    <label>具体种名</label>
+                    <input type="text" class="form-control" id="species" placeholder="请输入具体种名">
+                </div>
+                
+                <div class="form-group">
+                    <label>活动规模</label>
+                    <input type="text" class="form-control" id="activity-scale" placeholder="请输入活动规模">
+                </div>
+                
+                <div class="form-group">
+                    <label>位置与轨迹编号</label>
+                    <input type="text" class="form-control" id="location" placeholder="请输入位置与轨迹编号">
+                </div>
+                
+                <div class="form-group">
+                    <label>天气情况</label>
+                    <input type="text" class="form-control" id="weather" placeholder="请输入天气情况">
+                </div>
+                
+                <div class="form-group">
+                    <label>观测开始时间</label>
+                    <input type="datetime-local" class="form-control" id="start-time">
+                </div>
+                
+                <div class="form-group">
+                    <label>观测结束时间</label>
+                    <input type="datetime-local" class="form-control" id="end-time">
+                </div>
+                
+                <button class="add-survey-btn" id="save-observation-entry">
+                    保存观测对象记录
+                </button>
+            </div>
+            
+            <!-- 分条记录列表 -->
+            <div class="entry-list" id="observation-entry-list">
+                <!-- 分条记录将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 高铁干扰记录板块 -->
+    <div class="panel" id="interference-panel">
+        <div class="section-title">
+            <span>高铁干扰记录</span>
+            <div>
+                <button class="export-section-btn" id="export-all-interference">
+                    导出全部记录
+                </button>
+            </div>
+        </div>
+        
+        <div class="export-help">
+            导出功能说明：点击导出按钮后，数据会生成并自动下载为CSV文件。如果未自动下载，请检查浏览器下载设置。
+        </div>
+        
+        <button class="add-survey-btn" id="add-interference-survey">
+            新建高铁干扰调研记录
+        </button>
+        
+        <!-- 新建调研记录表单 -->
+        <div class="form-container" id="interference-form">
+            <div class="form-group">
+                <label>观测地</label>
+                <select class="form-control" id="interference-site">
+                    <option value="">请选择观测地</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" class="form-control" id="interference-date">
+            </div>
+            
+            <button class="add-survey-btn" id="save-interference-survey">
+                创建调研记录并开始分条记录
+            </button>
+        </div>
+        
+        <!-- 调研记录列表 -->
+        <div class="survey-list" id="interference-survey-list">
+            <!-- 调研记录将通过JavaScript动态生成 -->
+        </div>
+        
+        <!-- 分条记录区域 -->
+        <div id="interference-entries-area" style="display: none;">
+            <div class="section-title">
+                <span>高铁干扰分条记录</span>
+                <div>
+                    <button class="export-section-btn" id="export-interference-entries">
+                        导出当前记录
+                    </button>
+                    <button class="time-btn" id="back-to-interference-list">
+                        返回
+                    </button>
+                </div>
+            </div>
+            
+            <div class="state-indicator" id="interference-state">
+                当前观测地：<span id="current-interference-site"></span>，日期：<span id="current-interference-date"></span>
+            </div>
+            
+            <button class="add-survey-btn" id="add-interference-entry">
+                新建高铁干扰记录
+            </button>
+            
+            <!-- 分条记录表单 -->
+            <div class="form-container" id="interference-entry-form">
+                <div class="form-group">
+                    <label>高铁干扰事件编号</label>
+                    <div class="auto-id" id="auto-interference-id">等待生成...</div>
+                    <input type="hidden" id="interference-id">
+                </div>
+                
+                <div class="form-group">
+                    <label>车厢节数</label>
+                    <input type="number" class="form-control" id="carriage-count" placeholder="请输入车厢节数" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>经过时间</label>
+                    <div>
+                        <input type="text" class="form-control" id="passing-time" placeholder="点击下方按钮获取时间" readonly>
+                        <button class="time-btn" id="record-time-btn" style="margin-top: 10px; width: 100%;">
+                            开始记录时间
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="add-survey-btn" id="save-interference-entry">
+                    保存高铁干扰记录
+                </button>
+            </div>
+            
+            <!-- 分条记录列表 -->
+            <div class="entry-list" id="interference-entry-list">
+                <!-- 分条记录将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 鸟类行为记录板块 -->
+    <div class="panel" id="behavior-panel">
+        <div class="section-title">
+            <span>鸟类行为记录</span>
+            <div>
+                <button class="export-section-btn" id="export-all-behavior">
+                    导出全部记录
+                </button>
+            </div>
+        </div>
+        
+        <div class="export-help">
+            导出功能说明：点击导出按钮后，数据会生成并自动下载为CSV文件。如果未自动下载，请检查浏览器下载设置。
+        </div>
+        
+        <button class="add-survey-btn" id="add-behavior-survey">
+            新建鸟类行为调研记录
+        </button>
+        
+        <!-- 新建调研记录表单 - 新增观测对象编号 -->
+        <div class="form-container" id="behavior-form">
+            <div class="form-group">
+                <label>观测地</label>
+                <select class="form-control" id="behavior-site">
+                    <option value="">请选择观测地</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" class="form-control" id="behavior-date">
+            </div>
+            
+            <div class="form-group">
+                <label>观测对象编号</label>
+                <input type="text" class="form-control" id="behavior-object-id" placeholder="请输入观测对象编号（可选）">
+            </div>
+            
+            <button class="add-survey-btn" id="save-behavior-survey">
+                创建调研记录并开始记录行为
+            </button>
+        </div>
+        
+        <!-- 调研记录列表 -->
+        <div class="survey-list" id="behavior-survey-list">
+            <!-- 调研记录将通过JavaScript动态生成 -->
+        </div>
+        
+        <!-- 行为记录区域 -->
+        <div id="behavior-entries-area" style="display: none;">
+            <div class="section-title">
+                <span>鸟类行为记录</span>
+                <div>
+                    <button class="export-section-btn" id="export-behavior-entries">
+                        导出当前记录
+                    </button>
+                    <button class="time-btn" id="back-to-behavior-list">
+                        返回
+                    </button>
+                </div>
+            </div>
+            
+            <div class="state-indicator" id="behavior-state">
+                当前观测地：<span id="current-behavior-site"></span>，日期：<span id="current-behavior-date"></span>，观测对象：<span id="current-behavior-object"></span>
+            </div>
+            
+            <div class="behavior-btn-container">
+                <!-- 行为按钮 - 新增和修改 -->
+                <button class="behavior-btn" data-behavior="觅食">
+                    觅食
+                </button>
+                <button class="behavior-btn" data-behavior="进食">
+                    进食
+                </button>
+                <button class="behavior-btn" data-behavior="觅食成功">
+                    觅食成功
+                </button>
+                <button class="behavior-btn" data-behavior="饮水">
+                    饮水
+                </button>
+                <button class="behavior-btn" data-behavior="起飞">
+                    起飞
+                </button>
+                <button class="behavior-btn" data-behavior="惊飞">
+                    惊飞
+                </button>
+                <button class="behavior-btn" data-behavior="降落">
+                    降落
+                </button>
+                <button class="behavior-btn" data-behavior="理羽">
+                    理羽
+                </button>
+                <button class="behavior-btn" data-behavior="交流鸣叫">
+                    交流鸣叫
+                </button>
+                <button class="behavior-btn" data-behavior="互动行为（积极）">
+                    互动（积极）
+                </button>
+                <button class="behavior-btn" data-behavior="互动行为（消极）">
+                    互动（消极）
+                </button>
+                <button class="behavior-btn" data-behavior="警示鸣叫">
+                    警示鸣叫
+                </button>
+                <button class="behavior-btn" data-behavior="张望（3s）">
+                    张望（3s）
+                </button>
+                <button class="behavior-btn" data-behavior="警戒">
+                    警戒
+                </button>
+                <button class="behavior-btn" data-behavior="加速移动">
+                    加速移动
+                </button>
+                
+                <!-- 分布按钮 - 新增归岸、离岸 -->
+                <button class="behavior-btn distribution" data-behavior="集群">
+                    集群
+                </button>
+                <button class="behavior-btn distribution" data-behavior="分散">
+                    分散
+                </button>
+                <button class="behavior-btn distribution" data-behavior="归岸">
+                    归岸
+                </button>
+                <button class="behavior-btn distribution" data-behavior="离岸">
+                    离岸
+                </button>
+                <button class="behavior-btn distribution" data-behavior="位置变更0-30">
+                    变更0-30
+                </button>
+                <button class="behavior-btn distribution" data-behavior="位置变更30-60">
+                    变更30-60
+                </button>
+                <button class="behavior-btn distribution" data-behavior="位置变更60-100">
+                    变更60-100
+                </button>
+                <button class="behavior-btn distribution" data-behavior="位置变更100-150">
+                    变更100-150
+                </button>
+                <button class="behavior-btn distribution" data-behavior="位置变更150-250">
+                    变更150-250
+                </button>
+            </div>
+            
+            <!-- 行为记录列表 -->
+            <div class="entry-list" id="behavior-entry-list">
+                <!-- 行为记录将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="save-indicator" id="save-indicator">
+        数据已保存
+    </div>
+    
+    <div class="export-indicator" id="export-indicator">
+        文件已生成，正在下载...
+    </div>
+
+    <script>
+        // 全局变量 - 使用对象存储不同面板的状态
+        let appState = {
+            currentPanel: 'observation',
+            currentSurvey: {
+                observation: null,
+                interference: null,
+                behavior: null
+            },
+            panelData: {
+                observation: null,
+                interference: null,
+                behavior: null
+            }
+        };
+        
+        // 初始化日期字段为今天
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('observation-date').value = today;
+            document.getElementById('interference-date').value = today;
+            document.getElementById('behavior-date').value = today;
+            
+            // 从localStorage加载数据
+            loadAllData();
+            
+            // 初始化选项卡
+            initTabs();
+            
+            // 初始化事件监听器
+            initEventListeners();
+            
+            // 添加iOS特定优化
+            optimizeForIOS();
+        });
+        
+        // iOS优化函数
+        function optimizeForIOS() {
+            // 防止双击缩放
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // 防止滚动时触发点击
+            let isScrolling;
+            let scrollStartY = 0;
+            
+            document.addEventListener('touchstart', function(e) {
+                isScrolling = false;
+                scrollStartY = e.touches[0].pageY;
+            });
+            
+            document.addEventListener('touchmove', function(e) {
+                const currentY = e.touches[0].pageY;
+                const deltaY = Math.abs(currentY - scrollStartY);
+                
+                // 如果垂直滚动超过10px，认为是滚动而不是点击
+                if (deltaY > 10) {
+                    isScrolling = true;
+                }
+            });
+            
+            document.addEventListener('touchend', function(e) {
+                if (isScrolling) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // 优化滚动性能
+            document.querySelectorAll('.panel, .entry-list, .survey-list').forEach(el => {
+                el.style.webkitOverflowScrolling = 'touch';
+            });
+        }
+        
+        // 初始化选项卡
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                // 使用touchstart和click事件确保iOS响应
+                tab.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-tab');
+                    switchPanel(tabId);
+                });
+                
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchPanel(tabId);
+                });
+            });
+        }
+        
+        // 切换面板函数
+        function switchPanel(tabId) {
+            // 更新选项卡样式
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+            
+            // 显示对应面板
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(`${tabId}-panel`).classList.add('active');
+            
+            appState.currentPanel = tabId;
+            
+            // 确保行为按钮正常工作
+            if (tabId === 'behavior') {
+                setTimeout(() => {
+                    rebindBehaviorButtons();
+                }, 100);
+            }
+        }
+        
+        // 重新绑定行为按钮（防止iOS上的点击问题）
+        function rebindBehaviorButtons() {
+            const behaviorButtons = document.querySelectorAll('.behavior-btn');
+            behaviorButtons.forEach(btn => {
+                // 移除现有的事件监听器
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                // 重新绑定事件
+                newBtn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    const behavior = this.getAttribute('data-behavior');
+                    recordBehavior(behavior);
+                });
+                
+                newBtn.addEventListener('click', function() {
+                    const behavior = this.getAttribute('data-behavior');
+                    recordBehavior(behavior);
+                });
+            });
+        }
+        
+        // 初始化所有事件监听器
+        function initEventListeners() {
+            // 观测对象板块
+            document.getElementById('add-observation-survey').addEventListener('click', function() {
+                document.getElementById('observation-form').classList.add('active');
+            });
+            
+            document.getElementById('save-observation-survey').addEventListener('click', saveObservationSurvey);
+            
+            document.getElementById('add-observation-entry').addEventListener('click', function() {
+                document.getElementById('observation-entry-form').classList.add('active');
+            });
+            
+            document.getElementById('save-observation-entry').addEventListener('click', saveObservationEntry);
+            
+            document.getElementById('back-to-observation-list').addEventListener('click', function() {
+                document.getElementById('observation-entries-area').style.display = 'none';
+                document.getElementById('observation-panel').querySelector('.survey-list').style.display = 'block';
+                document.getElementById('add-observation-survey').style.display = 'block';
+                appState.currentSurvey.observation = null;
+                // 修复：返回后重新加载列表以更新记录条数
+                loadObservationSurveys();
+            });
+            
+            // 高铁干扰板块
+            document.getElementById('add-interference-survey').addEventListener('click', function() {
+                document.getElementById('interference-form').classList.add('active');
+            });
+            
+            document.getElementById('save-interference-survey').addEventListener('click', saveInterferenceSurvey);
+            
+            document.getElementById('add-interference-entry').addEventListener('click', function() {
+                // 生成自动编号
+                generateInterferenceId();
+                document.getElementById('interference-entry-form').classList.add('active');
+            });
+            
+            document.getElementById('save-interference-entry').addEventListener('click', saveInterferenceEntry);
+            
+            document.getElementById('record-time-btn').addEventListener('click', function() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('zh-CN', { hour12: false });
+                document.getElementById('passing-time').value = timeString;
+                showSaveIndicator();
+            });
+            
+            document.getElementById('back-to-interference-list').addEventListener('click', function() {
+                document.getElementById('interference-entries-area').style.display = 'none';
+                document.getElementById('interference-panel').querySelector('.survey-list').style.display = 'block';
+                document.getElementById('add-interference-survey').style.display = 'block';
+                appState.currentSurvey.interference = null;
+                // 修复：返回后重新加载列表以更新记录条数
+                loadInterferenceSurveys();
+            });
+            
+            // 鸟类行为板块
+            document.getElementById('add-behavior-survey').addEventListener('click', function() {
+                document.getElementById('behavior-form').classList.add('active');
+            });
+            
+            document.getElementById('save-behavior-survey').addEventListener('click', saveBehaviorSurvey);
+            
+            document.getElementById('back-to-behavior-list').addEventListener('click', function() {
+                document.getElementById('behavior-entries-area').style.display = 'none';
+                document.getElementById('behavior-panel').querySelector('.survey-list').style.display = 'block';
+                document.getElementById('add-behavior-survey').style.display = 'block';
+                appState.currentSurvey.behavior = null;
+                // 修复：返回后重新加载列表以更新记录条数
+                loadBehaviorSurveys();
+            });
+            
+            // 行为按钮 - 使用更可靠的事件绑定
+            rebindBehaviorButtons();
+            
+            // 导出按钮事件
+            document.getElementById('export-all-observation').addEventListener('click', function() {
+                exportAllObservation();
+            });
+            document.getElementById('export-observation-entries').addEventListener('click', function() {
+                exportObservationEntries();
+            });
+            document.getElementById('export-all-interference').addEventListener('click', function() {
+                exportAllInterference();
+            });
+            document.getElementById('export-interference-entries').addEventListener('click', function() {
+                exportInterferenceEntries();
+            });
+            document.getElementById('export-all-behavior').addEventListener('click', function() {
+                exportAllBehavior();
+            });
+            document.getElementById('export-behavior-entries').addEventListener('click', function() {
+                exportBehaviorEntries();
+            });
+            
+            // 实时保存功能
+            document.querySelectorAll('input, select').forEach(element => {
+                element.addEventListener('change', function() {
+                    showSaveIndicator();
+                });
+            });
+        }
+        
+        // 生成高铁干扰事件自动编号
+        function generateInterferenceId() {
+            if (!appState.currentSurvey.interference) return;
+            
+            // 获取当前调研记录信息
+            let surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const surveyIndex = surveys.findIndex(s => s.id === appState.currentSurvey.interference);
+            
+            if (surveyIndex === -1) return;
+            
+            const survey = surveys[surveyIndex];
+            const site = survey.site;
+            
+            // 获取当前记录数，确定下一个编号
+            const existingEntries = survey.entries || [];
+            const nextNumber = existingEntries.length + 1;
+            const idNumber = nextNumber.toString().padStart(4, '0');
+            const entryId = `G${site}${idNumber}`;
+            
+            // 显示在表单中
+            document.getElementById('auto-interference-id').textContent = entryId;
+            document.getElementById('interference-id').value = entryId;
+        }
+        
+        // 重新排序高铁干扰事件编号
+        function reorderInterferenceIds(surveyId) {
+            let surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const surveyIndex = surveys.findIndex(s => s.id === surveyId);
+            
+            if (surveyIndex === -1) return;
+            
+            const survey = surveys[surveyIndex];
+            const site = survey.site;
+            
+            if (!survey.entries || survey.entries.length === 0) return;
+            
+            // 按时间戳排序（如果有的话）或保持原顺序
+            let sortedEntries = [...survey.entries];
+            // 如果有timestamp字段，按时间排序
+            if (sortedEntries[0].timestamp) {
+                sortedEntries.sort((a, b) => a.timestamp - b.timestamp);
+            }
+            
+            // 重新编号
+            sortedEntries.forEach((entry, index) => {
+                const newNumber = (index + 1).toString().padStart(4, '0');
+                entry.interferenceId = `G${site}${newNumber}`;
+            });
+            
+            // 保存回localStorage
+            surveys[surveyIndex].entries = sortedEntries;
+            localStorage.setItem('interferenceSurveys', JSON.stringify(surveys));
+        }
+        
+        // 重新排序鸟类行为编号
+        function reorderBehaviorIds(surveyId) {
+            let surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            const surveyIndex = surveys.findIndex(s => s.id === surveyId);
+            
+            if (surveyIndex === -1) return;
+            
+            const survey = surveys[surveyIndex];
+            const site = survey.site;
+            
+            if (!survey.entries || survey.entries.length === 0) return;
+            
+            // 按时间戳排序
+            let sortedEntries = [...survey.entries];
+            sortedEntries.sort((a, b) => a.timestamp - b.timestamp);
+            
+            // 重新编号
+            sortedEntries.forEach((entry, index) => {
+                const newNumber = (index + 1).toString().padStart(4, '0');
+                entry.id = `${site}${newNumber}`;
+            });
+            
+            // 保存回localStorage
+            surveys[surveyIndex].entries = sortedEntries;
+            localStorage.setItem('behaviorSurveys', JSON.stringify(surveys));
+        }
+        
+        // 保存观测对象调研记录
+        function saveObservationSurvey() {
+            const site = document.getElementById('observation-site').value;
+            const date = document.getElementById('observation-date').value;
+            
+            if (!site) {
+                alert('请选择观测地');
+                return;
+            }
+            
+            const surveyId = 'obs_' + Date.now();
+            const survey = {
+                id: surveyId,
+                type: 'observation',
+                site: site,
+                date: date,
+                entries: []
+            };
+            
+            // 保存到localStorage
+            let surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            surveys.push(survey);
+            localStorage.setItem('observationSurveys', JSON.stringify(surveys));
+            
+            // 隐藏表单
+            document.getElementById('observation-form').classList.remove('active');
+            
+            // 清空表单
+            document.getElementById('observation-site').value = '';
+            
+            // 显示保存提示
+            showSaveIndicator();
+            
+            // 重新加载列表
+            loadObservationSurveys();
+            
+            // 进入分条记录界面
+            enterObservationEntries(surveyId);
+        }
+        
+        // 进入观测对象分条记录界面
+        function enterObservationEntries(surveyId) {
+            // 隐藏调研记录列表
+            document.getElementById('observation-survey-list').style.display = 'none';
+            document.getElementById('add-observation-survey').style.display = 'none';
+            
+            // 显示分条记录区域
+            document.getElementById('observation-entries-area').style.display = 'block';
+            
+            // 设置当前调研记录
+            appState.currentSurvey.observation = surveyId;
+            
+            // 加载分条记录
+            loadObservationEntries(surveyId);
+            
+            // 显示当前状态
+            let surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            if (survey) {
+                document.getElementById('current-observation-site').textContent = survey.site;
+                document.getElementById('current-observation-date').textContent = survey.date;
+            }
+        }
+        
+        // 保存观测对象分条记录
+        function saveObservationEntry() {
+            if (!appState.currentSurvey.observation) return;
+            
+            const entry = {
+                id: 'entry_' + Date.now(),
+                objectId: document.getElementById('object-id').value,
+                species: document.getElementById('species').value,
+                activityScale: document.getElementById('activity-scale').value,
+                location: document.getElementById('location').value,
+                weather: document.getElementById('weather').value,
+                startTime: document.getElementById('start-time').value,
+                endTime: document.getElementById('end-time').value
+            };
+            
+            // 验证必填字段
+            if (!entry.objectId || !entry.species) {
+                alert('对象编号和具体种名是必填项');
+                return;
+            }
+            
+            // 保存到localStorage
+            let surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            const surveyIndex = surveys.findIndex(s => s.id === appState.currentSurvey.observation);
+            
+            if (surveyIndex !== -1) {
+                if (!surveys[surveyIndex].entries) {
+                    surveys[surveyIndex].entries = [];
+                }
+                surveys[surveyIndex].entries.push(entry);
+                localStorage.setItem('observationSurveys', JSON.stringify(surveys));
+                
+                // 清空表单
+                document.getElementById('object-id').value = '';
+                document.getElementById('species').value = '';
+                document.getElementById('activity-scale').value = '';
+                document.getElementById('location').value = '';
+                document.getElementById('weather').value = '';
+                document.getElementById('start-time').value = '';
+                document.getElementById('end-time').value = '';
+                
+                // 隐藏表单
+                document.getElementById('observation-entry-form').classList.remove('active');
+                
+                // 显示保存提示
+                showSaveIndicator();
+                
+                // 重新加载分条记录
+                loadObservationEntries(appState.currentSurvey.observation);
+            }
+        }
+        
+        // 保存高铁干扰调研记录
+        function saveInterferenceSurvey() {
+            const site = document.getElementById('interference-site').value;
+            const date = document.getElementById('interference-date').value;
+            
+            if (!site) {
+                alert('请选择观测地');
+                return;
+            }
+            
+            const surveyId = 'int_' + Date.now();
+            const survey = {
+                id: surveyId,
+                type: 'interference',
+                site: site,
+                date: date,
+                entries: []
+            };
+            
+            // 保存到localStorage
+            let surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            surveys.push(survey);
+            localStorage.setItem('interferenceSurveys', JSON.stringify(surveys));
+            
+            // 隐藏表单
+            document.getElementById('interference-form').classList.remove('active');
+            
+            // 清空表单
+            document.getElementById('interference-site').value = '';
+            
+            // 显示保存提示
+            showSaveIndicator();
+            
+            // 重新加载列表
+            loadInterferenceSurveys();
+            
+            // 进入分条记录界面
+            enterInterferenceEntries(surveyId);
+        }
+        
+        // 进入高铁干扰分条记录界面
+        function enterInterferenceEntries(surveyId) {
+            // 隐藏调研记录列表
+            document.getElementById('interference-survey-list').style.display = 'none';
+            document.getElementById('add-interference-survey').style.display = 'none';
+            
+            // 显示分条记录区域
+            document.getElementById('interference-entries-area').style.display = 'block';
+            
+            // 设置当前调研记录
+            appState.currentSurvey.interference = surveyId;
+            
+            // 加载分条记录
+            loadInterferenceEntries(surveyId);
+            
+            // 显示当前状态
+            let surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            if (survey) {
+                document.getElementById('current-interference-site').textContent = survey.site;
+                document.getElementById('current-interference-date').textContent = survey.date;
+            }
+        }
+        
+        // 保存高铁干扰分条记录
+        function saveInterferenceEntry() {
+            if (!appState.currentSurvey.interference) return;
+            
+            const interferenceId = document.getElementById('interference-id').value;
+            const entry = {
+                id: 'entry_' + Date.now(),
+                interferenceId: interferenceId,
+                carriageCount: document.getElementById('carriage-count').value,
+                passingTime: document.getElementById('passing-time').value,
+                timestamp: Date.now()
+            };
+            
+            // 验证必填字段
+            if (!entry.passingTime) {
+                alert('经过时间是必填项');
+                return;
+            }
+            
+            // 保存到localStorage
+            let surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const surveyIndex = surveys.findIndex(s => s.id === appState.currentSurvey.interference);
+            
+            if (surveyIndex !== -1) {
+                if (!surveys[surveyIndex].entries) {
+                    surveys[surveyIndex].entries = [];
+                }
+                surveys[surveyIndex].entries.push(entry);
+                localStorage.setItem('interferenceSurveys', JSON.stringify(surveys));
+                
+                // 清空表单
+                document.getElementById('carriage-count').value = '';
+                document.getElementById('passing-time').value = '';
+                document.getElementById('auto-interference-id').textContent = '等待生成...';
+                document.getElementById('interference-id').value = '';
+                
+                // 隐藏表单
+                document.getElementById('interference-entry-form').classList.remove('active');
+                
+                // 显示保存提示
+                showSaveIndicator();
+                
+                // 重新加载分条记录
+                loadInterferenceEntries(appState.currentSurvey.interference);
+            }
+        }
+        
+        // 保存鸟类行为调研记录 - 新增观测对象编号
+        function saveBehaviorSurvey() {
+            const site = document.getElementById('behavior-site').value;
+            const date = document.getElementById('behavior-date').value;
+            const objectId = document.getElementById('behavior-object-id').value;
+            
+            if (!site) {
+                alert('请选择观测地');
+                return;
+            }
+            
+            const surveyId = 'beh_' + Date.now();
+            const survey = {
+                id: surveyId,
+                type: 'behavior',
+                site: site,
+                date: date,
+                objectId: objectId || '未填写', // 新增观测对象编号字段
+                entries: []
+            };
+            
+            // 保存到localStorage
+            let surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            surveys.push(survey);
+            localStorage.setItem('behaviorSurveys', JSON.stringify(surveys));
+            
+            // 隐藏表单
+            document.getElementById('behavior-form').classList.remove('active');
+            
+            // 清空表单
+            document.getElementById('behavior-site').value = '';
+            document.getElementById('behavior-object-id').value = '';
+            
+            // 显示保存提示
+            showSaveIndicator();
+            
+            // 重新加载列表
+            loadBehaviorSurveys();
+            
+            // 进入行为记录界面
+            enterBehaviorEntries(surveyId);
+        }
+        
+        // 进入鸟类行为记录界面
+        function enterBehaviorEntries(surveyId) {
+            // 隐藏调研记录列表
+            document.getElementById('behavior-survey-list').style.display = 'none';
+            document.getElementById('add-behavior-survey').style.display = 'none';
+            
+            // 显示行为记录区域
+            document.getElementById('behavior-entries-area').style.display = 'block';
+            
+            // 设置当前调研记录
+            appState.currentSurvey.behavior = surveyId;
+            
+            // 重新绑定行为按钮（确保点击有效）
+            setTimeout(() => {
+                rebindBehaviorButtons();
+            }, 50);
+            
+            // 加载行为记录
+            loadBehaviorEntries(surveyId);
+            
+            // 显示当前状态
+            let surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            if (survey) {
+                document.getElementById('current-behavior-site').textContent = survey.site;
+                document.getElementById('current-behavior-date').textContent = survey.date;
+                document.getElementById('current-behavior-object').textContent = survey.objectId || '未填写';
+            }
+        }
+        
+        // 记录鸟类行为
+        function recordBehavior(behavior) {
+            if (!appState.currentSurvey.behavior) {
+                alert('请先创建或选择一个行为调研记录');
+                return;
+            }
+            
+            // 获取当前调研记录信息
+            let surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            const surveyIndex = surveys.findIndex(s => s.id === appState.currentSurvey.behavior);
+            
+            if (surveyIndex === -1) return;
+            
+            const survey = surveys[surveyIndex];
+            const site = survey.site;
+            
+            // 获取当前记录数，确定下一个编号
+            const existingEntries = survey.entries || [];
+            const nextNumber = existingEntries.length + 1;
+            const idNumber = nextNumber.toString().padStart(4, '0');
+            const entryId = `${site}${idNumber}`;
+            
+            // 获取当前时间
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { hour12: false });
+            
+            const entry = {
+                id: entryId,
+                behavior: behavior,
+                time: timeString,
+                timestamp: now.getTime()
+            };
+            
+            // 保存到localStorage
+            if (!surveys[surveyIndex].entries) {
+                surveys[surveyIndex].entries = [];
+            }
+            surveys[surveyIndex].entries.push(entry);
+            localStorage.setItem('behaviorSurveys', JSON.stringify(surveys));
+            
+            // 显示保存提示
+            showSaveIndicator();
+            
+            // 重新加载行为记录
+            loadBehaviorEntries(appState.currentSurvey.behavior);
+        }
+        
+        // 删除调研记录
+        function deleteSurvey(type, id) {
+            if (!confirm('确定要删除这条调研记录吗？这将删除所有相关的分条记录。')) {
+                return;
+            }
+            
+            let key;
+            if (type === 'observation') key = 'observationSurveys';
+            else if (type === 'interference') key = 'interferenceSurveys';
+            else if (type === 'behavior') key = 'behaviorSurveys';
+            else return;
+            
+            let surveys = JSON.parse(localStorage.getItem(key) || '[]');
+            surveys = surveys.filter(s => s.id !== id);
+            localStorage.setItem(key, JSON.stringify(surveys));
+            
+            showSaveIndicator();
+            
+            // 重新加载对应的列表
+            if (type === 'observation') loadObservationSurveys();
+            else if (type === 'interference') loadInterferenceSurveys();
+            else if (type === 'behavior') loadBehaviorSurveys();
+        }
+        
+        // 删除分条记录
+        function deleteEntry(type, surveyId, entryId) {
+            if (!confirm('确定要删除这条记录吗？')) {
+                return;
+            }
+            
+            let key;
+            if (type === 'observation') key = 'observationSurveys';
+            else if (type === 'interference') key = 'interferenceSurveys';
+            else if (type === 'behavior') key = 'behaviorSurveys';
+            else return;
+            
+            let surveys = JSON.parse(localStorage.getItem(key) || '[]');
+            const surveyIndex = surveys.findIndex(s => s.id === surveyId);
+            
+            if (surveyIndex !== -1) {
+                surveys[surveyIndex].entries = surveys[surveyIndex].entries.filter(e => e.id !== entryId);
+                localStorage.setItem(key, JSON.stringify(surveys));
+                
+                showSaveIndicator();
+                
+                // 重新排序编号（如果是高铁干扰或鸟类行为）
+                if (type === 'interference') {
+                    reorderInterferenceIds(surveyId);
+                } else if (type === 'behavior') {
+                    reorderBehaviorIds(surveyId);
+                }
+                
+                // 重新加载对应的分条记录
+                if (type === 'observation') loadObservationEntries(surveyId);
+                else if (type === 'interference') loadInterferenceEntries(surveyId);
+                else if (type === 'behavior') loadBehaviorEntries(surveyId);
+            }
+        }
+        
+        // 导出所有观测对象记录
+        function exportAllObservation() {
+            const surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            if (surveys.length === 0) {
+                alert('暂无观测对象记录可导出');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 遍历所有调研记录
+            surveys.forEach((survey, index) => {
+                csvContent += `"观测对象调研记录信息"\n`;
+                csvContent += `"观测地","${survey.site}"\n`;
+                csvContent += `"日期","${survey.date}"\n`;
+                csvContent += `"记录数量","${survey.entries ? survey.entries.length : 0}"\n`;
+                csvContent += `\n`;
+                csvContent += `"对象编号","具体种名","活动规模","位置与轨迹编号","天气情况","观测开始时间","观测结束时间"\n`;
+                
+                // 添加数据行
+                if (survey.entries && survey.entries.length > 0) {
+                    survey.entries.forEach(entry => {
+                        csvContent += `"${entry.objectId || ''}","${entry.species || ''}","${entry.activityScale || ''}","${entry.location || ''}","${entry.weather || ''}","${entry.startTime || ''}","${entry.endTime || ''}"\n`;
+                    });
+                } else {
+                    csvContent += `"暂无记录","","","","","",""\n`;
+                }
+                
+                // 添加分页符（多个调研记录之间）
+                if (index < surveys.length - 1) {
+                    csvContent += `\n\n`;
+                }
+            });
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `观测对象记录_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 导出当前观测对象记录
+        function exportObservationEntries() {
+            if (!appState.currentSurvey.observation) {
+                alert('请先选择调研记录');
+                return;
+            }
+            
+            const surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            const survey = surveys.find(s => s.id === appState.currentSurvey.observation);
+            
+            if (!survey || !survey.entries || survey.entries.length === 0) {
+                alert('当前调研记录暂无数据可导出');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 添加调研记录信息
+            csvContent += `"观测对象调研记录信息"\n`;
+            csvContent += `"观测地","${survey.site}"\n`;
+            csvContent += `"日期","${survey.date}"\n`;
+            csvContent += `"记录数量","${survey.entries.length}"\n`;
+            csvContent += `\n`;
+            csvContent += `"对象编号","具体种名","活动规模","位置与轨迹编号","天气情况","观测开始时间","观测结束时间"\n`;
+            
+            // 添加数据行
+            survey.entries.forEach(entry => {
+                csvContent += `"${entry.objectId || ''}","${entry.species || ''}","${entry.activityScale || ''}","${entry.location || ''}","${entry.weather || ''}","${entry.startTime || ''}","${entry.endTime || ''}"\n`;
+            });
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `观测对象记录_${survey.site}_${survey.date}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 导出所有高铁干扰记录
+        function exportAllInterference() {
+            const surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            if (surveys.length === 0) {
+                alert('暂无高铁干扰记录可导出');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 遍历所有调研记录
+            surveys.forEach((survey, index) => {
+                csvContent += `"高铁干扰调研记录信息"\n`;
+                csvContent += `"观测地","${survey.site}"\n`;
+                csvContent += `"日期","${survey.date}"\n`;
+                csvContent += `"记录数量","${survey.entries ? survey.entries.length : 0}"\n`;
+                csvContent += `\n`;
+                csvContent += `"高铁干扰事件编号","车厢节数","经过时间"\n`;
+                
+                // 添加数据行
+                if (survey.entries && survey.entries.length > 0) {
+                    survey.entries.forEach(entry => {
+                        csvContent += `"${entry.interferenceId || ''}","${entry.carriageCount || ''}","${entry.passingTime || ''}"\n`;
+                    });
+                } else {
+                    csvContent += `"暂无记录","",""\n`;
+                }
+                
+                // 添加分页符（多个调研记录之间）
+                if (index < surveys.length - 1) {
+                    csvContent += `\n\n`;
+                }
+            });
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `高铁干扰记录_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 导出当前高铁干扰记录
+        function exportInterferenceEntries() {
+            if (!appState.currentSurvey.interference) {
+                alert('请先选择调研记录');
+                return;
+            }
+            
+            const surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const survey = surveys.find(s => s.id === appState.currentSurvey.interference);
+            
+            if (!survey || !survey.entries || survey.entries.length === 0) {
+                alert('当前调研记录暂无数据可导出');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 添加调研记录信息
+            csvContent += `"高铁干扰调研记录信息"\n`;
+            csvContent += `"观测地","${survey.site}"\n`;
+            csvContent += `"日期","${survey.date}"\n`;
+            csvContent += `"记录数量","${survey.entries.length}"\n`;
+            csvContent += `\n`;
+            csvContent += `"高铁干扰事件编号","车厢节数","经过时间"\n`;
+            
+            // 添加数据行
+            survey.entries.forEach(entry => {
+                csvContent += `"${entry.interferenceId || ''}","${entry.carriageCount || ''}","${entry.passingTime || ''}"\n`;
+            });
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `高铁干扰记录_${survey.site}_${survey.date}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 导出所有鸟类行为记录
+        function exportAllBehavior() {
+            const surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            if (surveys.length === 0) {
+                alert('暂无鸟类行为记录可导出');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 遍历所有调研记录
+            surveys.forEach((survey, index) => {
+                csvContent += `"鸟类行为调研记录信息"\n`;
+                csvContent += `"观测地","${survey.site}"\n`;
+                csvContent += `"日期","${survey.date}"\n`;
+                csvContent += `"观测对象编号","${survey.objectId || '未填写'}"\n`;
+                csvContent += `"记录数量","${survey.entries ? survey.entries.length : 0}"\n`;
+                csvContent += `\n`;
+                csvContent += `"行为记录编号","行为/分布","发生时间"\n`;
+                
+                // 添加数据行
+                if (survey.entries && survey.entries.length > 0) {
+                    // 按时间戳排序
+                    const sortedEntries = [...survey.entries].sort((a, b) => a.timestamp - b.timestamp);
+                    
+                    sortedEntries.forEach(entry => {
+                        csvContent += `"${entry.id || ''}","${entry.behavior || ''}","${entry.time || ''}"\n`;
+                    });
+                } else {
+                    csvContent += `"暂无记录","",""\n`;
+                }
+                
+                // 添加分页符（多个调研记录之间）
+                if (index < surveys.length - 1) {
+                    csvContent += `\n\n`;
+                }
+            });
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `鸟类行为记录_${new Date().toISOString().split('T')[0]}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 导出当前鸟类行为记录
+        function exportBehaviorEntries() {
+            if (!appState.currentSurvey.behavior) {
+                alert('请先选择调研记录');
+                return;
+            }
+            
+            const surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            const survey = surveys.find(s => s.id === appState.currentSurvey.behavior);
+            
+            if (!survey || !survey.entries || survey.entries.length === 0) {
+                alert('当前调研记录暂无数据可导出');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 添加调研记录信息
+            csvContent += `"鸟类行为调研记录信息"\n`;
+            csvContent += `"观测地","${survey.site}"\n`;
+            csvContent += `"日期","${survey.date}"\n`;
+            csvContent += `"观测对象编号","${survey.objectId || '未填写'}"\n`;
+            csvContent += `"记录数量","${survey.entries.length}"\n`;
+            csvContent += `\n`;
+            csvContent += `"行为记录编号","行为/分布","发生时间"\n`;
+            
+            // 添加数据行（按时间顺序）
+            const sortedEntries = [...survey.entries].sort((a, b) => a.timestamp - b.timestamp);
+            sortedEntries.forEach(entry => {
+                csvContent += `"${entry.id || ''}","${entry.behavior || ''}","${entry.time || ''}"\n`;
+            });
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `鸟类行为记录_${survey.site}_${survey.date}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 加载所有数据
+        function loadAllData() {
+            loadObservationSurveys();
+            loadInterferenceSurveys();
+            loadBehaviorSurveys();
+        }
+        
+        // 加载观测对象调研记录
+        function loadObservationSurveys() {
+            const surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            const container = document.getElementById('observation-survey-list');
+            
+            if (surveys.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无观测对象调研记录</p>
+                        <p>点击上方按钮创建新的调研记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = surveys.map(survey => `
+                <div class="survey-item">
+                    <div class="survey-info">
+                        <div class="survey-site">观测地: ${survey.site}</div>
+                        <div class="survey-date">日期: ${survey.date}</div>
+                        <div class="survey-entries-count">记录条数: ${survey.entries ? survey.entries.length : 0}</div>
+                    </div>
+                    <div>
+                        <button class="export-btn" onclick="exportSingleObservation('${survey.id}')" title="导出此调研记录">
+                            📤
+                        </button>
+                        <button class="delete-btn" onclick="deleteSurvey('observation', '${survey.id}')" title="删除此调研记录">
+                            🗑️
+                        </button>
+                        <button class="time-btn" onclick="enterObservationEntries('${survey.id}')" style="margin-top: 10px;">
+                            查看/编辑
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 导出单个观测对象调研记录
+        function exportSingleObservation(surveyId) {
+            const surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            
+            if (!survey) {
+                alert('调研记录不存在');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 添加调研记录信息
+            csvContent += `"观测对象调研记录信息"\n`;
+            csvContent += `"观测地","${survey.site}"\n`;
+            csvContent += `"日期","${survey.date}"\n`;
+            csvContent += `"记录数量","${survey.entries ? survey.entries.length : 0}"\n`;
+            csvContent += `\n`;
+            csvContent += `"对象编号","具体种名","活动规模","位置与轨迹编号","天气情况","观测开始时间","观测结束时间"\n`;
+            
+            // 添加数据行
+            if (survey.entries && survey.entries.length > 0) {
+                survey.entries.forEach(entry => {
+                    csvContent += `"${entry.objectId || ''}","${entry.species || ''}","${entry.activityScale || ''}","${entry.location || ''}","${entry.weather || ''}","${entry.startTime || ''}","${entry.endTime || ''}"\n`;
+                });
+            } else {
+                csvContent += `"暂无记录","","","","","",""\n`;
+            }
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `观测对象记录_${survey.site}_${survey.date}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 加载观测对象分条记录
+        function loadObservationEntries(surveyId) {
+            const surveys = JSON.parse(localStorage.getItem('observationSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            const container = document.getElementById('observation-entry-list');
+            
+            if (!survey || !survey.entries || survey.entries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无观测对象记录</p>
+                        <p>点击上方按钮创建新的记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = survey.entries.map(entry => `
+                <div class="entry-item">
+                    <div class="entry-header">
+                        <div class="entry-id">${entry.objectId}</div>
+                        <button class="delete-btn" onclick="deleteEntry('observation', '${surveyId}', '${entry.id}')">
+                            🗑️
+                        </button>
+                    </div>
+                    <div class="entry-details">
+                        <div><strong>种名:</strong> ${entry.species}</div>
+                        <div><strong>活动规模:</strong> ${entry.activityScale}</div>
+                        <div><strong>位置与轨迹编号:</strong> ${entry.location}</div>
+                        <div><strong>天气情况:</strong> ${entry.weather}</div>
+                        <div><strong>观测时间:</strong> ${entry.startTime} - ${entry.endTime}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 加载高铁干扰调研记录
+        function loadInterferenceSurveys() {
+            const surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const container = document.getElementById('interference-survey-list');
+            
+            if (surveys.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无高铁干扰调研记录</p>
+                        <p>点击上方按钮创建新的调研记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = surveys.map(survey => `
+                <div class="survey-item">
+                    <div class="survey-info">
+                        <div class="survey-site">观测地: ${survey.site}</div>
+                        <div class="survey-date">日期: ${survey.date}</div>
+                        <div class="survey-entries-count">记录条数: ${survey.entries ? survey.entries.length : 0}</div>
+                    </div>
+                    <div>
+                        <button class="export-btn" onclick="exportSingleInterference('${survey.id}')" title="导出此调研记录">
+                            📤
+                        </button>
+                        <button class="delete-btn" onclick="deleteSurvey('interference', '${survey.id}')" title="删除此调研记录">
+                            🗑️
+                        </button>
+                        <button class="time-btn" onclick="enterInterferenceEntries('${survey.id}')" style="margin-top: 10px;">
+                            查看/编辑
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 导出单个高铁干扰调研记录
+        function exportSingleInterference(surveyId) {
+            const surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            
+            if (!survey) {
+                alert('调研记录不存在');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 添加调研记录信息
+            csvContent += `"高铁干扰调研记录信息"\n`;
+            csvContent += `"观测地","${survey.site}"\n`;
+            csvContent += `"日期","${survey.date}"\n`;
+            csvContent += `"记录数量","${survey.entries ? survey.entries.length : 0}"\n`;
+            csvContent += `\n`;
+            csvContent += `"高铁干扰事件编号","车厢节数","经过时间"\n`;
+            
+            // 添加数据行
+            if (survey.entries && survey.entries.length > 0) {
+                survey.entries.forEach(entry => {
+                    csvContent += `"${entry.interferenceId || ''}","${entry.carriageCount || ''}","${entry.passingTime || ''}"\n`;
+                });
+            } else {
+                csvContent += `"暂无记录","",""\n`;
+            }
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `高铁干扰记录_${survey.site}_${survey.date}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 加载高铁干扰分条记录
+        function loadInterferenceEntries(surveyId) {
+            const surveys = JSON.parse(localStorage.getItem('interferenceSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            const container = document.getElementById('interference-entry-list');
+            
+            if (!survey || !survey.entries || survey.entries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无高铁干扰记录</p>
+                        <p>点击上方按钮创建新的记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = survey.entries.map(entry => `
+                <div class="entry-item">
+                    <div class="entry-header">
+                        <div class="entry-id">${entry.interferenceId}</div>
+                        <button class="delete-btn" onclick="deleteEntry('interference', '${surveyId}', '${entry.id}')">
+                            🗑️
+                        </button>
+                    </div>
+                    <div class="entry-details">
+                        <div><strong>车厢节数:</strong> ${entry.carriageCount}</div>
+                        <div><strong>经过时间:</strong> ${entry.passingTime}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 加载鸟类行为调研记录 - 更新为包含观测对象编号
+        function loadBehaviorSurveys() {
+            const surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            const container = document.getElementById('behavior-survey-list');
+            
+            if (surveys.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无鸟类行为调研记录</p>
+                        <p>点击上方按钮创建新的调研记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = surveys.map(survey => `
+                <div class="survey-item">
+                    <div class="survey-info">
+                        <div class="survey-site">观测地: ${survey.site}</div>
+                        <div class="survey-date">日期: ${survey.date}</div>
+                        <div class="survey-entries-count">记录条数: ${survey.entries ? survey.entries.length : 0}</div>
+                        ${survey.objectId ? `<div class="survey-entries-count">观测对象: ${survey.objectId}</div>` : ''}
+                    </div>
+                    <div>
+                        <button class="export-btn" onclick="exportSingleBehavior('${survey.id}')" title="导出此调研记录">
+                            📤
+                        </button>
+                        <button class="delete-btn" onclick="deleteSurvey('behavior', '${survey.id}')" title="删除此调研记录">
+                            🗑️
+                        </button>
+                        <button class="time-btn" onclick="enterBehaviorEntries('${survey.id}')" style="margin-top: 10px;">
+                            查看/编辑
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 导出单个鸟类行为调研记录 - 更新为包含观测对象编号
+        function exportSingleBehavior(surveyId) {
+            const surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            
+            if (!survey) {
+                alert('调研记录不存在');
+                return;
+            }
+            
+            // 显示导出提示
+            showExportIndicator();
+            
+            // 创建CSV内容
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            
+            // 添加调研记录信息
+            csvContent += `"鸟类行为调研记录信息"\n`;
+            csvContent += `"观测地","${survey.site}"\n`;
+            csvContent += `"日期","${survey.date}"\n`;
+            csvContent += `"观测对象编号","${survey.objectId || '未填写'}"\n`;
+            csvContent += `"记录数量","${survey.entries ? survey.entries.length : 0}"\n`;
+            csvContent += `\n`;
+            csvContent += `"行为记录编号","行为/分布","发生时间"\n`;
+            
+            // 添加数据行
+            if (survey.entries && survey.entries.length > 0) {
+                // 按时间顺序排序
+                const sortedEntries = [...survey.entries].sort((a, b) => a.timestamp - b.timestamp);
+                
+                sortedEntries.forEach(entry => {
+                    csvContent += `"${entry.id || ''}","${entry.behavior || ''}","${entry.time || ''}"\n`;
+                });
+            } else {
+                csvContent += `"暂无记录","",""\n`;
+            }
+            
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            const fileName = `鸟类行为记录_${survey.site}_${survey.date}.csv`;
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            
+            // 触发下载
+            link.click();
+            document.body.removeChild(link);
+            
+            // 显示导出成功提示
+            setTimeout(() => {
+                showSaveIndicator();
+            }, 1000);
+        }
+        
+        // 加载鸟类行为记录
+        function loadBehaviorEntries(surveyId) {
+            const surveys = JSON.parse(localStorage.getItem('behaviorSurveys') || '[]');
+            const survey = surveys.find(s => s.id === surveyId);
+            const container = document.getElementById('behavior-entry-list');
+            
+            if (!survey || !survey.entries || survey.entries.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>暂无鸟类行为记录</p>
+                        <p>点击上方按钮记录行为</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 按时间戳排序（最新的在前）
+            const sortedEntries = [...survey.entries].sort((a, b) => b.timestamp - a.timestamp);
+            
+            container.innerHTML = sortedEntries.map(entry => `
+                <div class="entry-item">
+                    <div class="entry-header">
+                        <div class="entry-id">${entry.id}</div>
+                        <button class="delete-btn" onclick="deleteEntry('behavior', '${surveyId}', '${entry.id}')">
+                            🗑️
+                        </button>
+                    </div>
+                    <div class="entry-details">
+                        <div><strong>行为/分布:</strong> ${entry.behavior}</div>
+                        <div><strong>发生时间:</strong> ${entry.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 显示保存提示
+        function showSaveIndicator() {
+            const indicator = document.getElementById('save-indicator');
+            indicator.style.display = 'block';
+            
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 2000);
+        }
+        
+        // 显示导出提示
+        function showExportIndicator() {
+            const indicator = document.getElementById('export-indicator');
+            indicator.style.display = 'block';
+            
+            setTimeout(() => {
+                indicator.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 使函数在全局可访问
+        window.deleteSurvey = deleteSurvey;
+        window.deleteEntry = deleteEntry;
+        window.enterObservationEntries = enterObservationEntries;
+        window.enterInterferenceEntries = enterInterferenceEntries;
+        window.enterBehaviorEntries = enterBehaviorEntries;
+        window.exportSingleObservation = exportSingleObservation;
+        window.exportSingleInterference = exportSingleInterference;
+        window.exportSingleBehavior = exportSingleBehavior;
+    </script>
+</body>
+</html>
